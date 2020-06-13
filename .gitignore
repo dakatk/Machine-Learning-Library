@@ -1,4 +1,3 @@
-sensei/__pychache__
-sensei/__pychache__/*.pyc
+__pycache__/
+*.py[cod]
 .DS_Store
-sensei/.DS_Store
