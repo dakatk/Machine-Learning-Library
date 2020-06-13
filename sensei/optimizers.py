@@ -14,10 +14,12 @@ class _Optimizer(object):
                     smoother steps, but longer training time
         """
 
+        self.batch_indices = list(range(inputs))
+
         self.inputs = inputs
         self.learning_rate = learning_rate
 
-    def next(self, t: int) -> int:
+    def next(self, t: int, batch_size: int) -> int:
         """ return the sample index for the current time step """
         pass
 
@@ -41,8 +43,10 @@ class SGD(_Optimizer):
 
         super().__init__(inputs, learning_rate)
 
-    def next(self, t):
-        return np.random.randint(0, self.inputs)
+    def next(self, t, batch_size):
+    
+        np.random.shuffle(self.batch_indices)
+        return self.batch_indices[:batch_size]
 
     def delta(self, layer_index, gradient):
     
@@ -73,6 +77,8 @@ class Adam(_Optimizer):
     beta1 = 0.9
     beta2 = 0.999
 
+    batch_start = 0
+
     def __init__(self, inputs, *, learning_rate=0.002):
 
         # set when each sample is taken
@@ -84,13 +90,19 @@ class Adam(_Optimizer):
 
         super().__init__(inputs, learning_rate)
 
-    def next(self, t):
+    def next(self, t, batch_size):
 
         self.t = t
 
-        # mini batch of size 1 (the Network class only allows for
-        # single sample training at this time)
-        return (self.t - 1) % self.inputs
+        batch = slice(self.batch_start, self.batch_start + batch_size)
+
+        self.batch_start += batch_size
+        
+        if self.batch_start >= self.inputs:
+            self.batch_start = 0
+
+        # mini batch of size 'batch_size'
+        return self.batch_indices[batch]
 
     def delta(self, layer_index, gradient):
 
@@ -140,7 +152,9 @@ class AggMo(_Optimizer):
         super().__init__(inputs, learning_rate)
 
     def next(self, t):
-        return np.random.randint(0, self.inputs)
+        
+        np.random.shuffle(self.batch_indices)
+        return self.batch_indices[:batch_size]
 
     def delta(self, layer_index, gradient):
 

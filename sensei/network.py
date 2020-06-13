@@ -13,8 +13,9 @@ class _Layer(object):
         # and vector shapes are guaranteed when set
         self.attached_layer = None
         self.activations = None
-        self.input_vec = None
-        self.delta = None
+        
+        self.deltas = []
+        self.inputs = []
 
         self.activation_fn = activation_fn
         self.neurons = neurons
@@ -22,7 +23,7 @@ class _Layer(object):
     def feedforward(self, input_vec):
 
         # input and activations should be 1D vectors
-        self.input_vec = input_vec
+        self.inputs.append(input_vec)
         self.activations = np.dot(self.weights, input_vec) + self.bias
 
         return self.activation_fn.call(self.activations)
@@ -31,24 +32,27 @@ class _Layer(object):
 
         # if no attached layer is found, then calculate output deltas
         if self.attached_layer is None:
-            self.delta = cost_fn.prime(actual, target)
+            delta = cost_fn.prime(actual, target)
 
         # otherwise, calculate deltas between hidden layers
         else:
-            self.delta = np.dot(self.attached_layer.weights.T, self.attached_layer.delta)
+            delta = np.dot(self.attached_layer.weights.T, self.attached_layer.deltas[-1])
 
         # multiply result by derivative of the activation function
-        self.delta *= self.activation_fn.prime(self.activations)
+        delta *= self.activation_fn.prime(self.activations)
+        self.deltas.append(delta)
 
     def update(self, index, optimizer):
 
+        delta = self.deltas.pop()
+
         # gradient = input vector * delta for each delta
-        # (creates a matrix with 'neurons' rows and 'inputs' columns)
-        gradient = np.dot(np.array([self.delta]).T, np.array([self.input_vec]))
+        # (creates a matrix with 'neurons' rows and 'input size' columns)
+        gradient = np.dot(np.array([delta]).T, np.array([self.inputs.pop()]))
 
         # optimizer determines delta for the weights
         self.weights -= optimizer.delta(index, gradient)
-        self.bias -= optimizer.learning_rate * self.delta
+        self.bias -= optimizer.learning_rate * delta
 
 
 class Network(object):
@@ -85,7 +89,7 @@ class Network(object):
             
         self.layers.append(layer)
 
-    def fit(self, inputs, outputs, epochs):
+    def fit(self, inputs, outputs, epochs, batch_size):
         """ Train the network with a given input and output set for
             a maximum number of training cycles given by epochs """
 
@@ -96,18 +100,24 @@ class Network(object):
         for t in range(1, epochs + 1):
 
             # optimizer determines which sample is chosen at each step
-            sample_index = self.optimizer.next(t)
+            samples = self.optimizer.next(t, batch_size)
 
             # feed forward and to get the prediction of the current sample
-            output = self.predict(inputs[sample_index])
+            network_outputs = [self.predict(inputs[sample]) for sample in samples]
 
+            # TODO enable batches during backpropo
+    
             # backprop to calculate deltas between layers
             for layer in reversed(self.layers):
-                layer.backprop(output, outputs[sample_index], self.cost_fn)
+                
+                for (output, sample) in zip(network_outputs, samples):
+                    layer.backprop(output, outputs[sample], self.cost_fn)
 
             # update all layers after deltas have been calculated
             for (i, layer) in enumerate(self.layers):
-                layer.update(i, self.optimizer)
+
+                for _ in samples:
+                    layer.update(i, self.optimizer)
 
             prediction = np.round(np.array([self.predict(i) for i in inputs]))
 
