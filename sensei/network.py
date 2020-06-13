@@ -13,9 +13,8 @@ class _Layer(object):
         # and vector shapes are guaranteed when set
         self.attached_layer = None
         self.activations = None
-        
-        self.deltas = []
-        self.inputs = []
+        self.input_vec = None
+        self.delta = None
 
         self.activation_fn = activation_fn
         self.neurons = neurons
@@ -23,7 +22,7 @@ class _Layer(object):
     def feedforward(self, input_vec):
 
         # input and activations should be 1D vectors
-        self.inputs.append(input_vec)
+        self.input_vec = input_vec
         self.activations = np.dot(self.weights, input_vec) + self.bias
 
         return self.activation_fn.call(self.activations)
@@ -32,27 +31,24 @@ class _Layer(object):
 
         # if no attached layer is found, then calculate output deltas
         if self.attached_layer is None:
-            delta = cost_fn.prime(actual, target)
+            self.delta = cost_fn.prime(actual, target)
 
         # otherwise, calculate deltas between hidden layers
         else:
-            delta = np.dot(self.attached_layer.weights.T, self.attached_layer.deltas[-1])
+            self.delta = np.dot(self.attached_layer.weights.T, self.attached_layer.delta)
 
         # multiply result by derivative of the activation function
-        delta *= self.activation_fn.prime(self.activations)
-        self.deltas.append(delta)
+        self.delta *= self.activation_fn.prime(self.activations)
 
     def update(self, index, optimizer):
 
-        delta = self.deltas.pop()
-
         # gradient = input vector * delta for each delta
         # (creates a matrix with 'neurons' rows and 'input size' columns)
-        gradient = np.dot(np.array([delta]).T, np.array([self.inputs.pop()]))
+        gradient = np.dot(np.array([self.delta]).T, np.array([self.input_vec]))
 
         # optimizer determines delta for the weights
         self.weights -= optimizer.delta(index, gradient)
-        self.bias -= optimizer.learning_rate * delta
+        self.bias -= optimizer.learning_rate * self.delta
 
 
 class Network(object):
@@ -102,28 +98,24 @@ class Network(object):
             # optimizer determines which sample is chosen at each step
             samples = self.optimizer.next(t, batch_size)
 
-            # feed forward and to get the prediction of the current sample
-            network_outputs = [self.predict(inputs[sample]) for sample in samples]
+            for sample in samples:
 
-            # TODO enable batches during backpropo
-    
-            # backprop to calculate deltas between layers
-            for layer in reversed(self.layers):
-                
-                for (output, sample) in zip(network_outputs, samples):
-                    layer.backprop(output, outputs[sample], self.cost_fn)
+                # feed forward and to get the prediction of the current sample
+                network_output = self.predict(inputs[sample])
 
-            # update all layers after deltas have been calculated
-            for (i, layer) in enumerate(self.layers):
+                # backprop to calculate deltas between layers
+                for layer in reversed(self.layers):
+                    layer.backprop(network_output, outputs[sample], self.cost_fn)
 
-                for _ in samples:
+                # update all layers after deltas have been calculated
+                for (i, layer) in enumerate(self.layers):
                     layer.update(i, self.optimizer)
 
-            prediction = np.round(np.array([self.predict(i) for i in inputs]))
+            predictions = np.round(np.array([self.predict(i) for i in inputs]))
 
             # accuracy metric (check that all predictions can be reasonably
             # interpreted as the expected values)
-            if np.all(prediction == outputs):
+            if np.all(predictions == outputs):
 
                 if convergence:
                     break

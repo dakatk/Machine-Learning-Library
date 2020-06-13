@@ -14,15 +14,20 @@ class _Optimizer(object):
                     smoother steps, but longer training time
         """
 
+        self.t = None
         self.batch_indices = list(range(inputs))
 
         self.inputs = inputs
         self.learning_rate = learning_rate
 
-    def next(self, t: int, batch_size: int) -> int:
-        """ return the sample index for the current time step """
-        pass
+    def next(self, t, batch_size):
+        """ return the sample indices for the current time step """
 
+        self.t = t
+        np.random.shuffle(self.batch_indices)
+
+        return self.batch_indices[:batch_size]
+    
     def delta(self, layer_index: int, gradient: np.ndarray) -> np.ndarray:
         """ perform gradient descent to calculate the weight deltas
             to complete the backprop steps """
@@ -44,9 +49,9 @@ class SGD(_Optimizer):
         super().__init__(inputs, learning_rate)
 
     def next(self, t, batch_size):
-    
-        np.random.shuffle(self.batch_indices)
-        return self.batch_indices[:batch_size]
+
+        # only single sample batches for SGD
+        return [np.random.randint(0, self.inputs)]
 
     def delta(self, layer_index, gradient):
     
@@ -89,20 +94,6 @@ class Adam(_Optimizer):
         self.velocities = []
 
         super().__init__(inputs, learning_rate)
-
-    def next(self, t, batch_size):
-
-        self.t = t
-
-        batch = slice(self.batch_start, self.batch_start + batch_size)
-
-        self.batch_start += batch_size
-        
-        if self.batch_start >= self.inputs:
-            self.batch_start = 0
-
-        # mini batch of size 'batch_size'
-        return self.batch_indices[batch]
 
     def delta(self, layer_index, gradient):
 
@@ -150,11 +141,6 @@ class AggMo(_Optimizer):
         self.velocities = []
 
         super().__init__(inputs, learning_rate)
-
-    def next(self, t):
-        
-        np.random.shuffle(self.batch_indices)
-        return self.batch_indices[:batch_size]
 
     def delta(self, layer_index, gradient):
 

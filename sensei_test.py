@@ -12,10 +12,10 @@ import argparse
 parser = argparse.ArgumentParser(description='Test neural network library')
 
 parser.add_argument('--epochs', dest='epochs', type=int, nargs=1,
-                    default=5000, help='Number of epochs (training cycles)')
+                    default=[5000], help='Number of epochs (training cycles)')
 
 parser.add_argument('--batchsize', dest='batch_size', type=int, nargs=1,
-                    default=1, help='Batch size of training samples')
+                    default=[1], help='Batch size of training samples')
 
 args = parser.parse_args()
 
@@ -49,7 +49,7 @@ network.add_layer(16, Sigmoid)
 network.add_layer(Y.shape[1], LeakyRelu)
 
 # train for a given amount of epochs
-network.fit(X, Y, max(1, args.epochs), max(1, args.batch_size))
+network.fit(X, Y, max(1, args.epochs[0]), max(1, args.batch_size[0]))
 
 # print all predictions next to the expected values
 for (x, y) in zip(X, Y):
