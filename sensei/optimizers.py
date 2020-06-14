@@ -4,7 +4,7 @@ import numpy as np
 class _Optimizer(object):
     """ Template for each optimizer """
 
-    def __init__(self, inputs, learning_rate):
+    def __init__(self, inputs: int, learning_rate: float):
         """
             inputs: the size of the inout set (NOT the size of an
                     individual input vector)
@@ -20,7 +20,7 @@ class _Optimizer(object):
         self.inputs = inputs
         self.learning_rate = learning_rate
 
-    def next(self, t, batch_size):
+    def next(self, t: int, batch_size: int) -> list:
         """ return the sample indices for the current time step """
 
         self.t = t
@@ -40,7 +40,7 @@ class SGD(_Optimizer):
 
     momentum = 0.9
 
-    def __init__(self, inputs, *, learning_rate=0.01):
+    def __init__(self, inputs: int, *, learning_rate: float = 0.01):
 
         # velocities will be populated when needed (defualts to zero
         # during first delta calculations)
@@ -48,12 +48,12 @@ class SGD(_Optimizer):
 
         super().__init__(inputs, learning_rate)
 
-    def next(self, t, batch_size):
+    def next(self, t: int, batch_size: int) -> list:
 
         # only single sample batches for SGD
         return [np.random.randint(0, self.inputs)]
 
-    def delta(self, layer_index, gradient):
+    def delta(self, layer_index: int, gradient: np.ndarray) -> np.ndarray:
     
         # default velocities corresponding to as given layer
         # to zero if they have not been previously populated
@@ -84,7 +84,7 @@ class Adam(_Optimizer):
 
     batch_start = 0
 
-    def __init__(self, inputs, *, learning_rate=0.002):
+    def __init__(self, inputs: int, *, learning_rate: float = 0.002):
 
         # set when each sample is taken
         self.t = None
@@ -95,7 +95,7 @@ class Adam(_Optimizer):
 
         super().__init__(inputs, learning_rate)
 
-    def delta(self, layer_index, gradient):
+    def delta(self, layer_index: int, gradient: np.ndarray) -> np.ndarray:
 
         # populate moments and deltas (defaulting to 
         if len(self.moments) <= layer_index:
@@ -130,7 +130,7 @@ class Adam(_Optimizer):
 class AggMo(_Optimizer):
     """ Aggregate momentum optimizer """
 
-    def __init__(self, inputs, *, k=3, learning_rate=0.01):
+    def __init__(self, inputs: int, *, k: int = 3, learning_rate: float = 0.01):
 
         # k = number of momentum calculations
         self.k = k
@@ -142,7 +142,7 @@ class AggMo(_Optimizer):
 
         super().__init__(inputs, learning_rate)
 
-    def delta(self, layer_index, gradient):
+    def delta(self, layer_index: int, gradient: np.ndarray) -> np.ndarray:
 
         # basically the same as SGD, except momentum is applied using
         # multiple momentum constants (betas) and the final delta is

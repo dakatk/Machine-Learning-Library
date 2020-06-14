@@ -1,10 +1,11 @@
 import numpy as np
+from .optimizers import _Optimizer
 
 
 class _Layer(object):
     """ Represents dense hidden layers and the output layer in a neural network """
 
-    def __init__(self, neurons, inputs, activation_fn):
+    def __init__(self, neurons: int, inputs: int, activation_fn: type):
 
         self.weights = np.random.rand(neurons, inputs)
         self.bias = np.random.rand(neurons)
@@ -19,7 +20,7 @@ class _Layer(object):
         self.activation_fn = activation_fn
         self.neurons = neurons
 
-    def feedforward(self, input_vec):
+    def feedforward(self, input_vec: np.ndarray) -> np.ndarray:
 
         # input and activations should be 1D vectors
         self.input_vec = input_vec
@@ -27,7 +28,7 @@ class _Layer(object):
 
         return self.activation_fn.call(self.activations)
 
-    def backprop(self, actual, target, cost_fn):
+    def backprop(self, actual: np.ndarray, target: np.ndarray, cost_fn: type) -> None:
 
         # if no attached layer is found, then calculate output deltas
         if self.attached_layer is None:
@@ -40,7 +41,7 @@ class _Layer(object):
         # multiply result by derivative of the activation function
         self.delta *= self.activation_fn.prime(self.activations)
 
-    def update(self, index, optimizer):
+    def update(self, index: int, optimizer: _Optimizer) -> None:
 
         # gradient = input vector * delta for each delta
         # (creates a matrix with 'neurons' rows and 'input size' columns)
@@ -54,7 +55,7 @@ class _Layer(object):
 class Network(object):
     """ Represents a network of layers (input, hidden, and output) """
 
-    def __init__(self, optimizer, cost_fn):
+    def __init__(self, optimizer: _Optimizer, cost_fn: type):
 
         # 'layers' array will be populated as the network structure is created
         self.layers = []
@@ -62,7 +63,7 @@ class Network(object):
         self.optimizer = optimizer
         self.cost_fn = cost_fn
 
-    def add_layer(self, neurons, activation_fn, input_size=None):
+    def add_layer(self, neurons: int, activation_fn: type, input_size: int = None) -> None:
         """
             Order of layers: input, hidden(s), output
             input_size should be an integer to define the input layer
@@ -85,7 +86,7 @@ class Network(object):
             
         self.layers.append(layer)
 
-    def fit(self, inputs, outputs, epochs, batch_size):
+    def fit(self, inputs: np.ndarray, outputs: np.ndarray, epochs: int, batch_size: int) -> None:
         """ Train the network with a given input and output set for
             a maximum number of training cycles given by epochs """
 
@@ -124,7 +125,7 @@ class Network(object):
                 print('Convergence by accuracy at epoch', t, '\n')
                 convergence = True
             
-    def predict(self, input_vec):
+    def predict(self, input_vec: np.ndarray) -> np.ndarray:
         """ Given a single input vector, determine what the network's output will be """
  
         output = input_vec

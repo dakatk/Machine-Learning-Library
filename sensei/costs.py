@@ -10,7 +10,7 @@ class MAE(object):
     _f_prime = np.vectorize(lambda i: -1.0 if i else 1.0)
 
     @staticmethod
-    def prime(o, y):
+    def prime(o: np.ndarray, y: np.ndarray) -> np.ndarray:
         return MAE._f_prime(o < y)
 
 
@@ -18,7 +18,7 @@ class MSE(object):
     """ Mean squared error (L2) loss function """
 
     @staticmethod
-    def prime(o, y):
+    def prime(o: np.ndarray, y: np.ndarray) -> np.ndarray:
         return o - y
 
 
@@ -26,7 +26,7 @@ class LogLoss(object):
     """ Binary crossentropy (logistic) loss function """
 
     @staticmethod
-    def prime(o, y):
+    def prime(o: np.ndarray, y: np.ndarray) -> np.ndarray:
 
         inv_o = 1 - o
         inv_y = 1 - y
