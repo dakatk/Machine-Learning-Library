@@ -14,10 +14,13 @@ parser = argparse.ArgumentParser(description='Test neural network library')
 parser.add_argument('--epochs', dest='epochs', type=int, nargs=1,
                     default=[5000], help='Number of epochs (training cycles)')
 
-parser.add_argument('--batchsize', dest='batch_size', type=int, nargs=1,
+parser.add_argument('--batch-size', dest='batch_size', type=int, nargs=1,
                     default=[1], help='Batch size of training samples')
 
 args = parser.parse_args()
+
+epochs = max(1, args.epochs[0])
+batch_size = max(1, args.batch_size[0])
 
 # all input vectors
 X = np.array([
@@ -43,13 +46,24 @@ Y = np.array([
 # and the MSE cost function
 network = Network(Adam(X.shape[0]), MSE)
 
+# TODO can we eliminate the need for explicit indexing of 'shape'?
 # set the network structure
 network.add_layer(16, Sigmoid, X.shape[1])
 network.add_layer(16, Sigmoid)
 network.add_layer(Y.shape[1], LeakyRelu)
 
 # train for a given amount of epochs
-network.fit(X, Y, max(1, args.epochs[0]), max(1, args.batch_size[0]))
+network.fit(X, Y, epochs, batch_size)
+
+# test saving the network to JSON file
+print('Saving to \'network.json\'...')
+network.save('network.json')
+print('Saved!\n')
+
+# test loading the network from JSON file
+print('Loading from \'network.json\'...')
+network = Network.load('network.json')
+print('Loaded!\n')
 
 # print all predictions next to the expected values
 for (x, y) in zip(X, Y):

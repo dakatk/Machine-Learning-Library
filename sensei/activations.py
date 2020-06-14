@@ -1,7 +1,7 @@
 import numpy as np
 
-## Activation functions:
 
+## Activation functions:
 class Sigmoid(object):
     """ Logistic sigmoid function """
 
@@ -58,3 +58,12 @@ class Relu(object):
     @staticmethod
     def prime(x: np.ndarray) -> np.ndarray:
         return np.heaviside(x, 0.5)
+
+
+## Serializer definitions:
+_activation_cls = {
+    'Sigmoid': Sigmoid,
+    'Tanh': Tanh,
+    'LeakyRelu': LeakyRelu,
+    'Relu': Relu
+}

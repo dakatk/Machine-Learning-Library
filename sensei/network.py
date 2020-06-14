@@ -1,5 +1,22 @@
+from .optimizers import _Optimizer, _optimizer_cls
+from .activations import _activation_cls
+from .costs import _cost_cls
+
+from json import JSONEncoder
+from types import FunctionType
+
+import json
 import numpy as np
-from .optimizers import _Optimizer
+
+
+class _NumpyArrayEncoder(JSONEncoder):
+    
+    def default(self, obj):
+        
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        
+        return JSONEncoder.default(self, obj)
 
 
 class _Layer(object):
@@ -51,6 +68,37 @@ class _Layer(object):
         self.weights -= optimizer.delta(index, gradient)
         self.bias -= optimizer.learning_rate * self.delta
 
+    def serialize(self):
+
+        serialized = {
+            'weights': self.weights,
+            'bias': self.bias,
+            'activations': self.activations,
+            'input': self.input_vec,
+            'delta': self.delta,
+            'activation': self.activation_fn.__name__,
+            'neurons': self.neurons
+        }
+
+        return serialized
+
+    @staticmethod
+    def deserialize(serialized):
+
+        neurons = serialized['neurons']
+        activation = _activation_cls[serialized['activation']]
+
+        layer = _Layer(neurons, 1, activation)
+
+        layer.weights = np.asarray(serialized['weights'])
+        layer.bias = np.asarray(serialized['bias'])
+
+        layer.activations = np.asarray(serialized['activations'])
+        layer.input_vec = np.asarray(serialized['input'])
+        layer.delta = np.asarray(serialized['delta'])
+
+        return layer
+
 
 class Network(object):
     """ Represents a network of layers (input, hidden, and output) """
@@ -86,7 +134,7 @@ class Network(object):
             
         self.layers.append(layer)
 
-    def fit(self, inputs: np.ndarray, outputs: np.ndarray, epochs: int, batch_size: int) -> None:
+    def fit(self, inputs: np.ndarray, outputs: np.ndarray, epochs: int, batch_size: int, accuracy: FunctionType = np.round) -> None:
         """ Train the network with a given input and output set for
             a maximum number of training cycles given by epochs """
 
@@ -137,3 +185,41 @@ class Network(object):
             output = layer.feedforward(output)
 
         return output
+
+    def save(self, filename: str) -> None:
+        """ Save the network hyperparameters and data to a JSON file """
+
+        serialized = {
+            'layers': [layer.serialize() for layer in self.layers],
+            'cost': self.cost_fn.__name__,
+            'optimizer': self.optimizer.serialize()
+        }
+        
+        with open(filename, 'w') as f:
+            json.dump(serialized, f, cls=_NumpyArrayEncoder, indent=2)
+
+    @staticmethod
+    def load(filename: str) -> None:
+
+        with open(filename, 'r') as f:
+            serialized = json.load(f)
+
+        optimizer_name = serialized['optimizer']['class']
+        optimizer_kwargs = {key: serialized['optimizer'][key] for key in serialized['optimizer'] if key != 'class'}
+        optimizer = _optimizer_cls[optimizer_name](**optimizer_kwargs)
+
+        cost_name = serialized['cost']
+        cost = _cost_cls[cost_name]
+
+        network = Network(optimizer, cost)
+
+        for serialized_layer in serialized['layers']:
+
+            layer = _Layer.deserialize(serialized_layer)
+
+            if len(network.layers) != 0:
+                network.layers[-1].attached_layer = layer
+
+            network.layers.append(layer)
+
+        return network

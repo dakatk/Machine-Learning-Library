@@ -33,6 +33,16 @@ class _Optimizer(object):
             to complete the backprop steps """
         pass
 
+    def serialize(self):
+
+        serialized = {
+            'class': self.__class__.__name__,
+            'inputs': self.inputs,
+            'learning_rate': self.learning_rate
+        }
+
+        return serialized
+
 ## Optimization functions:
 
 class SGD(_Optimizer):
@@ -130,7 +140,7 @@ class Adam(_Optimizer):
 class AggMo(_Optimizer):
     """ Aggregate momentum optimizer """
 
-    def __init__(self, inputs: int, *, k: int = 3, learning_rate: float = 0.01):
+    def __init__(self, inputs: int, *, learning_rate: float = 0.01, k: int = 3):
 
         # k = number of momentum calculations
         self.k = k
@@ -159,3 +169,18 @@ class AggMo(_Optimizer):
         self.velocities[layer_index] = [moment(*args) for args in zip(self.betas, self.velocities[layer_index])]
 
         return (self.learning_rate * sum(self.velocities[layer_index])) / self.k
+
+    def serialize(self):
+
+        serialized = super().serialize()
+        serialized['k'] = self.k
+
+        return serialized
+
+
+##Serializer definitions:
+_optimizer_cls = {
+    'SGD': SGD,
+    'Adam': Adam,
+    'AggMo': AggMo
+}

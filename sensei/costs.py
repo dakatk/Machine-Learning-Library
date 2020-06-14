@@ -1,5 +1,6 @@
 import numpy as np
 
+
 ## Cost (or loss) functions:
 
 # 'np.vectorize' creates a function that applies itself to
@@ -39,3 +40,11 @@ class LogLoss(object):
             inv_o = inv_o + 1e-8
 
         return -((y / o) - (inv_y / inv_o))
+
+
+## Serializer definitions:
+_cost_cls = {
+    'MAE': MAE,
+    'MSE': MSE,
+    'LogLoss': LogLoss
+}
