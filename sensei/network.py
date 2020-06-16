@@ -68,9 +68,10 @@ class _Layer(object):
         self.weights -= optimizer.delta(index, gradient)
         self.bias -= optimizer.learning_rate * self.delta
 
-    def serialize(self):
+    @property
+    def serialized(self):
 
-        serialized = {
+        return {
             'weights': self.weights,
             'bias': self.bias,
             'activations': self.activations,
@@ -79,8 +80,6 @@ class _Layer(object):
             'activation': self.activation_fn.__name__,
             'neurons': self.neurons
         }
-
-        return serialized
 
     @staticmethod
     def deserialize(serialized):
@@ -166,6 +165,8 @@ class Network(object):
             # interpreted as the expected values)
             if np.all(predictions == outputs):
 
+                # putting this 'if' statement here allows for at least one
+                # more training cycle to verify convergence
                 if convergence:
                     break
 
@@ -190,9 +191,9 @@ class Network(object):
         """ Save the network hyperparameters and data to a JSON file """
 
         serialized = {
-            'layers': [layer.serialize() for layer in self.layers],
+            'layers': [layer.serialized for layer in self.layers],
             'cost': self.cost_fn.__name__,
-            'optimizer': self.optimizer.serialize()
+            'optimizer': self.optimizer.serialized
         }
         
         with open(filename, 'w') as f:

@@ -9,6 +9,7 @@ from sensei.costs import MSE
 import numpy as np
 import argparse
 
+## Command line argument parsing:
 parser = argparse.ArgumentParser(description='Test neural network library')
 
 parser.add_argument('--epochs', dest='epochs', type=int, nargs=1,

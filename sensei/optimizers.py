@@ -33,15 +33,14 @@ class _Optimizer(object):
             to complete the backprop steps """
         pass
 
-    def serialize(self):
+    @property
+    def serialized(self):
 
-        serialized = {
+        return {
             'class': self.__class__.__name__,
             'inputs': self.inputs,
             'learning_rate': self.learning_rate
         }
-
-        return serialized
 
 ## Optimization functions:
 
@@ -170,9 +169,10 @@ class AggMo(_Optimizer):
 
         return (self.learning_rate * sum(self.velocities[layer_index])) / self.k
 
-    def serialize(self):
+    @property
+    def serialized(self):
 
-        serialized = super().serialize()
+        serialized = super().serialized
         serialized['k'] = self.k
 
         return serialized
