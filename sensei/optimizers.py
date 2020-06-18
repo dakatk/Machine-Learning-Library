@@ -1,7 +1,28 @@
 import numpy as np
 
 
-class _Optimizer(object):
+class _TypeOptimizer(type):
+
+    ## Serializer definitions:
+    _cls_names = {}
+
+    ## Singleton instances:
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+
+        # each singleton has a single instance
+        if not cls in cls._instances:
+            cls._instances[cls] = super(_TypeOptimizer, cls).__call__(*args, **kwargs)
+
+        return cls._instances[cls]
+
+    @staticmethod
+    def register(cls):
+        cls._cls_names[cls.__name__] = cls
+    
+
+class _Optimizer(object, metaclass=_TypeOptimizer):
     """ Template for each optimizer """
 
     def __init__(self, inputs: int, learning_rate: float):
@@ -41,6 +62,15 @@ class _Optimizer(object):
             'inputs': self.inputs,
             'learning_rate': self.learning_rate
         }
+
+    @classmethod
+    def deserialize(cls, serialized):
+
+        cls_name = serialized['class']
+        cls_kwargs = {key: serialized[key] for key in serialized}
+
+        return cls._cls_names[cls_name](**cls_kwargs)
+        
 
 ## Optimization functions:
 
@@ -178,9 +208,6 @@ class AggMo(_Optimizer):
         return serialized
 
 
-##Serializer definitions:
-_optimizer_cls = {
-    'SGD': SGD,
-    'Adam': Adam,
-    'AggMo': AggMo
-}
+_TypeOptimizer.register(SGD)
+_TypeOptimizer.register(Adam)
+_TypeOptimizer.register(AggMo)

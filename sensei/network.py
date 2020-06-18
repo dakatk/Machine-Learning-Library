@@ -1,4 +1,4 @@
-from .optimizers import _Optimizer, _optimizer_cls
+from .optimizers import _Optimizer
 from .activations import _activation_cls
 from .costs import _cost_cls
 
@@ -205,12 +205,12 @@ class Network(object):
         with open(filename, 'r') as f:
             serialized = json.load(f)
 
-        optimizer_name = serialized['optimizer']['class']
+        '''optimizer_name = serialized['optimizer']['class']
         optimizer_kwargs = {key: serialized['optimizer'][key] for key in serialized['optimizer'] if key != 'class'}
-        optimizer = _optimizer_cls[optimizer_name](**optimizer_kwargs)
+        optimizer = _optimizer_cls[optimizer_name](**optimizer_kwargs)'''
 
-        cost_name = serialized['cost']
-        cost = _cost_cls[cost_name]
+        optimizer = _Optimizer.deserialize(serialized['optimizer'])
+        cost = _cost_cls[serialized['cost']]
 
         network = Network(optimizer, cost)
 
