@@ -2,6 +2,7 @@ import numpy as np
 
 
 class _TypeOptimizer(type):
+    """ Metaclass for setting up 'Optimizer' types """
 
     ## Serializer definitions:
     _cls_names = {}
@@ -17,9 +18,25 @@ class _TypeOptimizer(type):
 
         return cls._instances[cls]
 
-    @staticmethod
-    def register(cls):
-        cls._cls_names[cls.__name__] = cls
+    def __new__(cls, name, bases, dct):
+
+        new_cls = super().__new__(cls, name, bases, dct)
+
+        # Subclass is defined as a class that directly inherits
+        # From any type except 'object'
+        def is_subclass(bases):
+
+            if len(bases) == 0:
+                return False
+
+            return object not in bases
+
+        # If the subclass name hasn't been registered for
+        # serialization yet, add it to the registry
+        if name not in cls._cls_names and is_subclass(bases):
+            cls._cls_names[name] = new_cls
+
+        return new_cls 
     
 
 class _Optimizer(object, metaclass=_TypeOptimizer):
@@ -67,10 +84,9 @@ class _Optimizer(object, metaclass=_TypeOptimizer):
     def deserialize(cls, serialized):
 
         cls_name = serialized['class']
-        cls_kwargs = {key: serialized[key] for key in serialized}
+        cls_kwargs = {key: serialized[key] for key in serialized if key != 'class'}
 
         return cls._cls_names[cls_name](**cls_kwargs)
-        
 
 ## Optimization functions:
 
@@ -206,8 +222,3 @@ class AggMo(_Optimizer):
         serialized['k'] = self.k
 
         return serialized
-
-
-_TypeOptimizer.register(SGD)
-_TypeOptimizer.register(Adam)
-_TypeOptimizer.register(AggMo)
