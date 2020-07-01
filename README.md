@@ -7,3 +7,8 @@ The comments in the code reflect my learning process, with all the different pie
 I decided to call this library Sensei, because sensei is another word for teacher which also kind of sounds like Tensor.
 
 Feel free to use this code or any variation of this code to do whatever you want with. I don't claim that any of the code here is perfect, but it works well enough or the few cases I've tested it with and having the source code can be useful for exploring why things work the way they do.
+
+## Requirments:
+
+ - `numpy`
+ - `cupy`
