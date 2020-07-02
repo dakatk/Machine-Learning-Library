@@ -133,13 +133,17 @@ class Network(object):
             
         self.layers.append(layer)
 
-    def fit(self, inputs: np.ndarray, outputs: np.ndarray, epochs: int, batch_size: int, accuracy: FunctionType = np.round) -> None:
+    def fit(self, inputs: np.ndarray, outputs: np.ndarray, epochs: int, batch_size: int, metric: FunctionType = None) -> list:
         """ Train the network with a given input and output set for
             a maximum number of training cycles given by epochs """
 
         print('Training for', epochs, 'epochs\n')
 
         convergence = False
+        errors = []
+
+        if metric is None:
+            metric = lambda o, y: np.all(np.round(o) == y)
 
         for t in range(1, epochs + 1):
 
@@ -159,11 +163,12 @@ class Network(object):
                 for (i, layer) in enumerate(self.layers):
                     layer.update(i, self.optimizer)
 
-            predictions = np.round(np.array([self.predict(i) for i in inputs]))
+            predictions = np.array([self.predict(i) for i in inputs])
+            errors.append(np.abs(outputs - predictions))
 
             # accuracy metric (check that all predictions can be reasonably
             # interpreted as the expected values)
-            if np.all(predictions == outputs):
+            if metric(predictions, outputs):
 
                 # putting this 'if' statement here allows for at least one
                 # more training cycle to verify convergence
@@ -173,7 +178,9 @@ class Network(object):
                 # if the accuracy metric shows convergence, training is done
                 print('Convergence by accuracy at epoch', t, '\n')
                 convergence = True
-            
+    
+        return errors
+
     def predict(self, input_vec: np.ndarray) -> np.ndarray:
         """ Given a single input vector, determine what the network's output will be """
  
