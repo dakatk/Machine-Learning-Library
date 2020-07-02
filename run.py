@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from sensei.activations import *
 from sensei.network import Network
 
+from sensei.activations import *
 from sensei.optimizers import *
 from sensei.costs import *
+from sensei.metrics import *
 
 from matplotlib import pyplot as plt
 
@@ -34,12 +35,12 @@ network.add_layer(16, Sigmoid, X.shape[1])
 network.add_layer(16, Sigmoid)
 network.add_layer(Y.shape[1], LeakyRelu)
 
-errors = network.fit(X, Y, 5000, 1)
+errors = network.fit(X, Y, Accuracy(1), 5000)
 
 for (x, y) in zip(X, Y):
 
     prediction = network.predict(x)
-    print (x, y, prediction, sep=' | ')
+    print(x, y, prediction, sep=' | ')
 
 plt.title('Error/Epoch')
 plt.xlabel('Epoch')

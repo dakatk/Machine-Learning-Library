@@ -1,4 +1,6 @@
 from .optimizers import _Optimizer
+from .metrics import _Metric
+
 from .activations import _activation_cls
 from .costs import _cost_cls
 
@@ -133,7 +135,7 @@ class Network(object):
             
         self.layers.append(layer)
 
-    def fit(self, inputs: np.ndarray, outputs: np.ndarray, epochs: int, batch_size: int, metric: FunctionType = None) -> list:
+    def fit(self, inputs: np.ndarray, outputs: np.ndarray, metric: _Metric, epochs: int, batch_size: int = 1) -> list:
         """ Train the network with a given input and output set for
             a maximum number of training cycles given by epochs """
 
@@ -141,9 +143,6 @@ class Network(object):
 
         convergence = False
         errors = []
-
-        if metric is None:
-            metric = lambda o, y: np.all(np.round(o) == y)
 
         for t in range(1, epochs + 1):
 
@@ -168,7 +167,7 @@ class Network(object):
 
             # accuracy metric (check that all predictions can be reasonably
             # interpreted as the expected values)
-            if metric(predictions, outputs):
+            if metric.call(predictions, outputs):
 
                 # putting this 'if' statement here allows for at least one
                 # more training cycle to verify convergence

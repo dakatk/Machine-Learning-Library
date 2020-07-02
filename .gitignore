@@ -3,3 +3,4 @@ network.json
 *.py[cod]
 .DS_Store
 .vscode
+launch.json
