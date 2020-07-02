@@ -29,6 +29,9 @@ Y = np.array([
     [6.0]
 ])
 
+def loss(e):
+    return np.sum(e ** 2) / 2
+
 network = Network(Adam(X.shape[0]), MSE)
 
 network.add_layer(16, Sigmoid, X.shape[1])
@@ -47,7 +50,7 @@ plt.xlabel('Epoch')
 plt.ylabel('Error')
 
 indices = list(range(1, len(errors) + 1))
-errors = list(map(np.sum, errors))
+errors = list(map(loss, errors))
 
 plt.plot(indices, errors)
 plt.show()
