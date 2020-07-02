@@ -141,8 +141,18 @@ class Network(object):
 
         print('Training for', epochs, 'epochs\n')
 
-        convergence = False
         errors = []
+        
+        predictions = np.array([self.predict(i) for i in inputs])
+        errors.append(outputs - predictions)
+
+        # accuracy metric (check that all predictions can be reasonably
+        # interpreted as the expected values)
+        if metric.call(predictions, outputs):
+
+            # if the accuracy metric shows convergence, training is done
+            print('Convergence by accuracy at epoch', t, '\n')
+            break
 
         for t in range(1, epochs + 1):
 
@@ -161,23 +171,7 @@ class Network(object):
                 # update all layers after deltas have been calculated
                 for (i, layer) in enumerate(self.layers):
                     layer.update(i, self.optimizer)
-
-            predictions = np.array([self.predict(i) for i in inputs])
-            errors.append(np.abs(outputs - predictions))
-
-            # accuracy metric (check that all predictions can be reasonably
-            # interpreted as the expected values)
-            if metric.call(predictions, outputs):
-
-                # putting this 'if' statement here allows for at least one
-                # more training cycle to verify convergence
-                if convergence:
-                    break
-
-                # if the accuracy metric shows convergence, training is done
-                print('Convergence by accuracy at epoch', t, '\n')
-                convergence = True
-    
+                    
         return errors
 
     def predict(self, input_vec: np.ndarray) -> np.ndarray:
