@@ -12,12 +12,12 @@ import numpy as np
 
 
 class _NumpyArrayEncoder(JSONEncoder):
-    
+
     def default(self, obj):
-        
+
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        
+
         return JSONEncoder.default(self, obj)
 
 
@@ -55,7 +55,8 @@ class _Layer(object):
 
         # otherwise, calculate deltas between hidden layers
         else:
-            self.delta = np.dot(self.attached_layer.weights.T, self.attached_layer.delta)
+            self.delta = np.dot(self.attached_layer.weights.T,
+                                self.attached_layer.delta)
 
         # multiply result by derivative of the activation function
         self.delta *= self.activation_fn.prime(self.activations)
@@ -132,7 +133,7 @@ class Network(object):
             # of neurons in the previous layer (thanks to the result of the dot product)
             layer = _Layer(neurons, prev_layer.neurons, activation_fn)
             prev_layer.attached_layer = layer
-            
+
         self.layers.append(layer)
 
     def fit(self, inputs: np.ndarray, outputs: np.ndarray, metric: _Metric, epochs: int, batch_size: int = 1) -> list:
@@ -142,19 +143,19 @@ class Network(object):
         print('Training for', epochs, 'epochs\n')
 
         errors = []
-        
-        predictions = np.array([self.predict(i) for i in inputs])
-        errors.append(outputs - predictions)
-
-        # accuracy metric (check that all predictions can be reasonably
-        # interpreted as the expected values)
-        if metric.call(predictions, outputs):
-
-            # if the accuracy metric shows convergence, training is done
-            print('Convergence by accuracy at epoch', t, '\n')
-            break
 
         for t in range(1, epochs + 1):
+
+            predictions = np.array([self.predict(i) for i in inputs])
+            errors.append(outputs - predictions)
+
+            # accuracy metric (check that all predictions can be reasonably
+            # interpreted as the expected values)
+            if metric.call(predictions, outputs):
+
+                # if the accuracy metric shows convergence, training is done
+                print('Convergence by accuracy at epoch', t, '\n')
+                break
 
             # optimizer determines which sample is chosen at each step
             samples = self.optimizer.next(t, batch_size)
@@ -166,23 +167,24 @@ class Network(object):
 
                 # backprop to calculate deltas between layers
                 for layer in reversed(self.layers):
-                    layer.backprop(network_output, outputs[sample], self.cost_fn)
+                    layer.backprop(
+                        network_output, outputs[sample], self.cost_fn)
 
                 # update all layers after deltas have been calculated
                 for (i, layer) in enumerate(self.layers):
                     layer.update(i, self.optimizer)
-                    
+
         return errors
 
     def predict(self, input_vec: np.ndarray) -> np.ndarray:
         """ Given a single input vector, determine what the network's output will be """
- 
+
         output = input_vec
 
         # feedforward through each layer
         for layer in self.layers:
 
-            # previous layer's output becomes next layer's input 
+            # previous layer's output becomes next layer's input
             output = layer.feedforward(output)
 
         return output
@@ -195,7 +197,7 @@ class Network(object):
             'cost': self.cost_fn.__name__,
             'optimizer': self.optimizer.serialized
         }
-        
+
         with open(filename, 'w') as f:
             json.dump(serialized, f, cls=_NumpyArrayEncoder, indent=2)
 
