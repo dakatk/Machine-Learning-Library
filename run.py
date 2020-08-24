@@ -29,28 +29,39 @@ Y = np.array([
     [6.0]
 ])
 
+
 def loss(e):
     return np.sum(e ** 2) / 2
 
+
+# Adam test
 network = Network(Adam(X.shape[0]), MSE)
 
 network.add_layer(16, Sigmoid, X.shape[1])
 network.add_layer(16, Sigmoid)
 network.add_layer(Y.shape[1], LeakyRelu)
+network.save('network.json')
 
 errors = network.fit(X, Y, Accuracy(1), 5000)
-
-for (x, y) in zip(X, Y):
-
-    prediction = network.predict(x)
-    print(x, y, prediction, sep=' | ')
-
-plt.title('Error/Epoch')
-plt.xlabel('Epoch')
-plt.ylabel('Error')
 
 indices = list(range(1, len(errors) + 1))
 errors = list(map(loss, errors))
 
 plt.plot(indices, errors)
+
+# SGD test
+network = Network.load('network.json')
+network.optimizer = AggMo(X.shape[0])
+
+errors = network.fit(X, Y, Accuracy(1), 5000)
+
+indices = list(range(1, len(errors) + 1))
+errors = list(map(loss, errors))
+
+plt.plot(indices, errors)
+
+# Show and compare plots
+plt.title('Error/Epoch')
+plt.xlabel('Epoch')
+plt.ylabel('Error')
 plt.show()

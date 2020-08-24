@@ -166,7 +166,7 @@ class Adam(_Optimizer):
         # the momentum getting as it gets too aggressive
         self.velocities[layer_index] = (self.beta2 * self.velocities[layer_index]) + ((1 - self.beta2) * (gradient ** 2))
 
-        # momentum and velocity each become more prominent as the
+        # momentum and velocity each become less prominent as the
         # time steps increase ('1 - (b^t)' approaches 1 as 't' increases for 'b < 1')
         moment_bar = self.moments[layer_index] / (1 - (self.beta1 ** self.t))
         velocity_bar = self.velocities[layer_index] / (1 - (self.beta2 ** self.t))
@@ -183,7 +183,7 @@ class Adam(_Optimizer):
 
 
 class AggMo(_Optimizer):
-    """ Aggregate momentum optimizer """
+    """ Aggregated momentum optimizer """
 
     def __init__(self, inputs: int, *, learning_rate: float = 0.01, k: int = 3):
 

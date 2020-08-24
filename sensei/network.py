@@ -66,6 +66,7 @@ class _Layer(object):
         # gradient = input vector * delta for each delta
         # (creates a matrix with 'neurons' rows and 'input size' columns)
         gradient = np.dot(np.array([self.delta]).T, np.array([self.input_vec]))
+        # print(self.delta)
 
         # optimizer determines delta for the weights
         self.weights -= optimizer.delta(index, gradient)
