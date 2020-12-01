@@ -20,7 +20,7 @@ class MSE(object):
 
     @staticmethod
     def prime(o: np.ndarray, y: np.ndarray) -> np.ndarray:
-        return o - y
+        return (o - y) / len(o)
 
 
 class LogLoss(object):

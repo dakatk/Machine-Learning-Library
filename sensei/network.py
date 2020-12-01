@@ -155,7 +155,7 @@ class Network(object):
             if metric.call(predictions, outputs):
 
                 # if the accuracy metric shows convergence, training is done
-                print('Convergence by accuracy at epoch', t, '\n')
+                print('Convergence at epoch', t, '\n')
                 break
 
             # optimizer determines which sample is chosen at each step
@@ -202,8 +202,8 @@ class Network(object):
         with open(filename, 'w') as f:
             json.dump(serialized, f, cls=_NumpyArrayEncoder, indent=2)
 
-    @staticmethod
-    def load(filename: str) -> None:
+    @classmethod
+    def load(self, filename: str) -> None:
 
         with open(filename, 'r') as f:
             serialized = json.load(f)
@@ -215,7 +215,11 @@ class Network(object):
         optimizer = _Optimizer.deserialize(serialized['optimizer'])
         cost = _cost_cls[serialized['cost']]
 
-        network = Network(optimizer, cost)
+        if self == Network:
+            network = Network(optimizer, cost)
+        else:
+            network = self
+            network.layers = []
 
         for serialized_layer in serialized['layers']:
 

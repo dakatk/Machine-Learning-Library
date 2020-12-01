@@ -117,7 +117,6 @@ class SGD(_Optimizer):
 
         # classical momentum calculation:
         def moment(vel):
-
             nonlocal self, gradient
             return (vel * self.momentum) + (gradient * self.learning_rate)
 
@@ -174,7 +173,7 @@ class Adam(_Optimizer):
         velocity_sqr = np.sqrt(velocity_bar)
 
         # avoid divide-by-zero errors
-        if (np.any(velocity_sqr == 0.0)):
+        if np.any(velocity_sqr == 0.0):
             velocity_sqr += 1e-7
 
         # apply momentum in 'learning_rate' steps subdued by the calculated velocity
